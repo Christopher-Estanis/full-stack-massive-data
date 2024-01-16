@@ -1,0 +1,14 @@
+node_modules
+backend/node_modules
+
+build
+backend/build
+
+coverage
+backend/coverage
+
+.eslintrc.json
+backend/.eslintrc.json
+
+tsconfig.json
+backend/tsconfig.json
