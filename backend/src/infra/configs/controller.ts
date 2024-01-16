@@ -1,5 +1,5 @@
-import express, { Router } from 'express'
-import { HttpResponse, serverError } from "../helpers/Http"
+import express, { Router, Response, Request } from 'express'
+import { HttpResponse, serverError, successStatusCode } from "../helpers/Http"
 
 type HandleCallback = (httpRequest: any) => Promise<HttpResponse>
 
@@ -15,21 +15,27 @@ export abstract class Controller {
   constructor (private readonly router: Router) {}
 
   public abstract run (): void
+  public abstract DEFAULT_PATH: string
 
   protected route (method: Methods, path: string, callback: HandleCallback) {
-    this.router[method](path, (req, res) => this.handle({ ...req.query, ...req.body, ...req.params }, callback))
+    this.router[method](this.DEFAULT_PATH + path, (req, res) => this.handle(req, res, callback))
   }
 
-  private async handle (httpRequest: any, callback: HandleCallback): Promise<HttpResponse> {
-    // const error = this.validate(httpRequest)
-    // if (error !== undefined) {
-    //   return badRequest(error)
-    // }
-
+  private async handle (req: Request, res: Response, callback: HandleCallback): Promise<Response> {
     try {
-      return await callback(httpRequest)
+      const { code, data, message } = await callback({ ...req.query, ...req.body, ...req.params })
+      
+      return res.status(code).json({
+        success: successStatusCode(code),
+        message,
+        data
+      })
     } catch (error: any) {
-      return serverError(error)
+      return res.status(error.code).json({
+        success: successStatusCode(error.code),
+        message: error.message,
+        data: error.data
+      })
     }
   }
 }
