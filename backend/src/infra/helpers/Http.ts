@@ -1,4 +1,4 @@
-import { ServerError, UnauthorizedError } from "../../exceptions/http"
+import { ServerError, UnauthorizedError } from '../../exceptions/http'
 
 export type HttpResponse<T = any> = {
   code: number
@@ -6,7 +6,7 @@ export type HttpResponse<T = any> = {
   message: string
 }
 
-export const successStatusCode = (code: number) => 200 <= code && 300 >= code 
+export const successStatusCode = (code: number | undefined) => !!code && (code >= 200 && code <= 300)
 
 export const ok = <T = any> (message: string, data: T): HttpResponse<T> => ({
   code: 200,
@@ -14,7 +14,7 @@ export const ok = <T = any> (message: string, data: T): HttpResponse<T> => ({
   message
 })
 
-export const badRequest = (message: string, error: Error): HttpResponse<Error> => ({
+export const badRequest = (message: string, error?: any): HttpResponse<Error> => ({
   code: 400,
   message,
   data: error

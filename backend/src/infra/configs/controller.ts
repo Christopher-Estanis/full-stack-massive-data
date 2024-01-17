@@ -1,7 +1,9 @@
-import express, { Router, Response, Request } from 'express'
-import { HttpResponse, serverError, successStatusCode } from "../helpers/Http"
+import { Request, Response, Router } from 'express'
 
-type HandleCallback = (httpRequest: any) => Promise<HttpResponse>
+import { HttpResponse, successStatusCode } from '../helpers/Http'
+
+export type HandleCallbackResponse = HttpResponse | void
+type HandleCallback = (req: Request, res: Response) => Promise<HandleCallbackResponse>
 
 export enum Methods {
   GET = 'get',
@@ -12,23 +14,21 @@ export enum Methods {
 }
 
 export abstract class Controller {
-  constructor (private readonly router: Router) {}
+  constructor (protected readonly router: Router) {}
 
-  public abstract run (): void
-  public abstract DEFAULT_PATH: string
+  public abstract setupRoutes (): void
+  protected abstract DEFAULT_PATH: string
+  protected path = (path: string) => this.DEFAULT_PATH + path
 
-  protected route (method: Methods, path: string, callback: HandleCallback) {
-    this.router[method](this.DEFAULT_PATH + path, (req, res) => this.handle(req, res, callback))
-  }
-
-  private async handle (req: Request, res: Response, callback: HandleCallback): Promise<Response> {
+  protected async handle (req: Request, res: Response, callback: HandleCallback): Promise<Response> {
     try {
-      const { code, data, message } = await callback({ ...req.query, ...req.body, ...req.params })
-      
-      return res.status(code).json({
-        success: successStatusCode(code),
-        message,
-        data
+      // eslint-disable-next-line n/no-callback-literal
+      const result = await callback(req, res)
+
+      return res.status(result?.code ?? 200).json({
+        success: successStatusCode(result?.code),
+        message: result?.message,
+        data: result?.data
       })
     } catch (error: any) {
       return res.status(error.code).json({

@@ -1,9 +1,12 @@
-import express, { Express, json } from 'express'
-
 import cors from 'cors'
+import express, { Express } from 'express'
+import http from 'http'
 
-export const setupMiddlewares = (app: Express) => {
+import { WebSocketMiddleware } from '../middlewares/WebSocketMiddleware'
+
+export const setupMiddlewares = (app: Express, server: http.Server) => {
   app.use(cors())
   app.use(express.urlencoded({ extended: false }))
   app.use(express.json())
+  app.use(WebSocketMiddleware(server))
 }
