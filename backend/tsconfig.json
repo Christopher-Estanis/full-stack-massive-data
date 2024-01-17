@@ -8,10 +8,12 @@
     "noImplicitAny": false,
     "esModuleInterop": true,
     "allowJs": true,
-    "declaration": false,
+    "declaration": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "strictPropertyInitialization": false,
+    "strictPropertyInitialization": true,
+    "checkJs": true,
+    
     "moduleResolution": "node",
     "types": [
       "node",
