@@ -1,11 +1,19 @@
 'use client'
+import socket from '@/config/SocketConfig'
 import { FileModel } from '@/model/FileModel'
 import axios from 'axios'
 import Image from 'next/image'
-import { ChangeEvent, MouseEvent, useState } from 'react'
+import { ChangeEvent, MouseEvent, useEffect, useState } from 'react'
+
+interface FileStatsDTO {
+  total: number
+  success: number
+  error: number
+}
 
 export default function Home() {
   const [file, setFile] = useState<FileModel>()
+  const [fileStats, setFileStats] = useState<FileStatsDTO>({ error: 0, success: 0, total: 0 })
   
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target?.files?.[0]) return '' // TODO Handle with error
@@ -30,6 +38,15 @@ export default function Home() {
       console.error('Erro ao enviar o arquivo:', error)
     }
   }
+
+  useEffect(() => {
+    socket.connect()
+
+    socket.on('message', (message) => setFileStats(message))
+    return () => {
+      socket.disconnect()
+    }
+  }, [])
   
   return (
     <main className="full-w flex flex-col gap-y-4">
@@ -56,30 +73,24 @@ export default function Home() {
           <p>Arquivo: {file && file.object.name}</p>
           <button 
             onClick={handleUploadFinancingCSV} 
-            disabled={Boolean(file)} 
-            className={`bg-${file ? 'blue-500 hover:bg-blue-600' : 'gray-400'} text-white p-2 rounded-md text-center transition duration-300`}
+            className={`${file ? 'bg-blue-500 hover:bg-blue-600 cursor-pointer' : 'bg-gray-400 cursor-no-drop'} w-3/4 text-white p-2 rounded-md text-center transition duration-300`}
           >
             Enviar Arquivo
           </button>
         </div>
 
         <div className='flex-1'>
-          <h1>0%</h1>
-          <p>Porcentagem de linhas processadas</p>
-        </div>
-
-        <div className='flex-1'>
-          <h1>0</h1>
+          <h1>{fileStats.error}</h1>
           <p>Quantidade de erros</p>
         </div>
 
         <div className='flex-1'>
-          <h1>0</h1>
+          <h1>{fileStats.success}</h1>
           <p>Quantidade de sucessos</p>
         </div>
 
         <div className='flex-1'>
-          <h1>0</h1>
+          <h1>{fileStats.total}</h1>
           <p>Quantidade de linhas processadas</p>
         </div>
       </section>
