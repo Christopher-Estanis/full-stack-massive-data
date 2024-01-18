@@ -29,10 +29,11 @@ export abstract class Controller {
         data: result?.data
       })
     } catch (error: any) {
-      return res.status(error.code).json({
-        success: successStatusCode(error.code),
-        message: error.message,
-        data: error.data
+      console.log(error)
+      return res.status(error?.code ?? 500).json({
+        success: successStatusCode(error?.code),
+        message: error?.message,
+        data: error?.data
       })
     }
   }

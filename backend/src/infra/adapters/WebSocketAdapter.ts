@@ -1,38 +1,31 @@
-import WebSocket, { WebSocket as WebSocketClient } from 'ws'
+import http from 'http'
+import { Server as SocketIoServer, Socket } from 'socket.io'
 
 export class WebSocketAdapter {
-  private readonly webSocketServer: WebSocket.Server
-  private readonly clients = new Set<WebSocketClient>()
+  private readonly io: SocketIoServer
 
-  constructor (webSocket: typeof WebSocket, server) {
-    this.webSocketServer = new webSocket.Server({ server })
+  constructor (server: http.Server) {
+    this.io = new SocketIoServer(server, {
+      cors: {
+        origin: 'http://localhost:3000',
+        methods: ['GET', 'POST']
+      }
+    })
 
-    this.webSocketServer.on('connection', (socket) => {
-      this.clients.add(socket)
+    this.io.on('connection', (socket: Socket) => {
       console.log('CONNECT')
 
-      socket.on('error', () => {
-        console.log('ERROR')
-        this.clients.delete(socket)
+      socket.on('disconnect', () => {
+        console.log('DISCONNECT')
       })
 
-      socket.on('unexpected-response', () => {
-        console.log('ERROR')
-        this.clients.delete(socket)
-      })
-
-      socket.on('close', () => {
-        console.log('CLOSE')
-        this.clients.delete(socket)
+      socket.on('error', (err) => {
+        console.log('ERROR:', err)
       })
     })
   }
 
   sendToAll (message) {
-    this.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message)
-      }
-    })
+    this.io.emit('message', message)
   }
 }

@@ -1,6 +1,8 @@
 import csvParser from 'csv-parser'
 import { Router } from 'express'
+import stream from 'stream'
 
+import { CSVStats } from '../../domain/File/CSVStats'
 import { MulterAdapter } from '../../infra/adapters/MulterAdapter'
 import { Controller } from '../../infra/configs/controller'
 import { badRequest, ok } from '../../infra/helpers/Http'
@@ -22,6 +24,8 @@ export class FinancingController extends Controller {
       console.log(csvData)
       if (!csvData) return badRequest('')
 
+      const bufferStream = new stream.PassThrough()
+      bufferStream.end(csvData.buffer)
       // console.log(csvData)
 
       const results: Array<any> = []
@@ -31,20 +35,15 @@ export class FinancingController extends Controller {
         console.log(data)
       })
 
-      // parser.on('end', () => {
-      //   // All rows parsed, now you can do additional processing if needed
-      //   // For example, you can manipulate 'results' array
+      const csvStats = new CSVStats({ error: 0, success: 0, total: 0 })
 
-      //   // Send the processed data to the client
-      //   return res.json(results)
-      // })
-
-      // parser.on('error', (err) => {
-      //   console.error('Error parsing CSV:', err)
-      //   res.status(500).send('Internal Server Error')
-      // })
-
-      req.websocketAdapter.sendToAll('Hello, clients!')
+      bufferStream
+        .pipe(csvParser())
+        .on('data', (data) => {
+          csvStats.addSuccess()
+          req.websocketAdapter.sendToAll(csvStats.toMessage)
+          // results.push(data);
+        })
 
       // fs.createReadStream(csvData).pipe()
       return ok('test', {})
