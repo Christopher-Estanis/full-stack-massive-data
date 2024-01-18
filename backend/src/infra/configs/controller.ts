@@ -14,11 +14,9 @@ export enum Methods {
 }
 
 export abstract class Controller {
-  constructor (protected readonly router: Router) {}
+  protected DEFAULT_PATH: string = ''
 
-  public abstract setupRoutes (): void
-  protected abstract DEFAULT_PATH: string
-  protected path = (path: string) => this.DEFAULT_PATH + path
+  protected abstract setupRoutes (router: Router): void
 
   protected async handle (req: Request, res: Response, callback: HandleCallback): Promise<Response> {
     try {
@@ -37,5 +35,13 @@ export abstract class Controller {
         data: error.data
       })
     }
+  }
+
+  public router () {
+    const router = Router()
+
+    this.setupRoutes(router)
+
+    return router
   }
 }
