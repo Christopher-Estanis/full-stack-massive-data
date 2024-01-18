@@ -1,34 +1,35 @@
+import csvParser from 'csv-parser'
 import { Router } from 'express'
 
 import { MulterAdapter } from '../../infra/adapters/MulterAdapter'
 import { Controller } from '../../infra/configs/controller'
-import { ok } from '../../infra/helpers/Http'
+import { badRequest, ok } from '../../infra/helpers/Http'
 
-export class CSVController extends Controller {
+export class FinancingController extends Controller {
   DEFAULT_PATH = '/csv'
   multerAdapter: MulterAdapter
 
-  constructor (router: Router, multerAdapter: MulterAdapter) {
-    super(router)
+  constructor (multerAdapter: MulterAdapter) {
+    super()
     this.multerAdapter = multerAdapter
   }
 
-  setupRoutes () {
+  setupRoutes (router: Router) {
     // [POST] Import CSV
-    this.router.post(this.path('/'), this.multerAdapter.single('csv'), async (req, res) => this.handle(req, res, async () => {
-      // const csvData = req?.file?.buffer?.toString()
-      // if (!csvData) return badRequest('')
+    router.post('/import', this.multerAdapter.single('csv'), async (req, res) => this.handle(req, res, async () => {
+      const csvData = req?.file
+
+      console.log(csvData)
+      if (!csvData) return badRequest('')
 
       // console.log(csvData)
 
-      // const results: Array<any> = []
-      // const parser = csvParser()
+      const results: Array<any> = []
+      const parser = csvParser()
 
-      // parser.on('data', (data) => {
-      //   // Process each row of the CSV as it's parsed
-      //   // You can add your custom processing logic here
-      //   results.push(data)
-      // })
+      parser.on('data', (data) => {
+        console.log(data)
+      })
 
       // parser.on('end', () => {
       //   // All rows parsed, now you can do additional processing if needed
@@ -50,7 +51,7 @@ export class CSVController extends Controller {
     }))
 
     // [GET] Import CSV
-    this.router.get(this.path('/'), async (req, res) => this.handle(req, res, async () => {
+    router.get('/', async (req, res) => this.handle(req, res, async () => {
       return ok('Importação realizada com sucesso!', {})
     }))
   }
